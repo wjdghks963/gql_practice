@@ -43,6 +43,8 @@ gql은 필요한 모든 data를 하나의 request로 받을 수 있다.
 
 # Apollo Server
 
+GQL을 서버에서 api를 작성하는 방법
+
 https://www.apollographql.com/docs/apollo-server/
 
 Apollo 서버는 Apollo 클라이언트를 포함한 모든 GraphQL 클라이언트와 호환되는 사양 준수(spec-compliant)의 오픈 소스 GraphQL 서버
@@ -257,3 +259,14 @@ const resolver = {
    부르는 Object의 값이 나온다. ex) fullName에서 root는 User의 정보
 2. args
    Type에서 정의했던 args의 자리
+
+<br>
+
+# Apollo Client
+
+GQL을 프론트에서 받아 오는 방법
+
+GraphQL을 사용하여 로컬 및 원격 데이터를 모두 관리할 수 있는 JavaScript용 상태 관리 라이브러리
+UI를 자동으로 업데이트하면서 애플리케이션 데이터를 가져오고, 캐시하고, 수정하는 데 사용한다.
+
+https://www.apollographql.com/docs/react
