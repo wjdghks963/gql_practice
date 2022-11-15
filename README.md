@@ -270,3 +270,136 @@ GraphQL을 사용하여 로컬 및 원격 데이터를 모두 관리할 수 있�
 UI를 자동으로 업데이트하면서 애플리케이션 데이터를 가져오고, 캐시하고, 수정하는 데 사용한다.
 
 https://www.apollographql.com/docs/react
+
+## 클라이언트 시작
+
+```javascript
+import { ApolloClient, InMemoryCache } from "@apollo/client";
+
+export const client = new ApolloClient({
+  uri: "http://localhost:4000",
+  cache: new InMemoryCache(),
+});
+```
+
+- uri : 자원이 있는 uri를 문자열로 작성
+- cache : 설정한 쿼리 결과물을 브라우저 캐시에 저장해놓음 어떤 캐시에 저장할지 설정 가능
+
+<br>
+
+App에 Provider를 감싸준다.
+Provider는 기본적으로 앱 안의 모두가 속성값(client)에 접근할 수 있게 해준다.
+
+index.tsx
+
+```javascript
+<ApolloProvider client={client}>
+  <RouterProvider router={router} />
+</ApolloProvider>
+```
+
+컴포넌트에서 Provider로 감싼 client를 사용할 때는 hook을 사용한다.
+
+```javascript
+export default function Movies() {
+  const client = useApolloClient();
+  return <div>sdas</div>;
+}
+```
+
+## useQuery
+
+useQuery 훅을 사용하여 React에서 GraphQL 데이터를 가져오고 그 결과를 UI에 연결할 수 있다.
+
+Apollo 애플리케이션에서 쿼리를 실행하기 위한 기본 API.
+
+컴포넌트가 렌더링될 때 useQuery는 UI를 렌더링하는 데 사용할 수 있는 loading, error, data 속성이 포함된 Apollo Client의 객체를 반환한다.
+
+이 객체는 client에 설정한 cache에 저장되며 만약 새로운 데이터가 전달된다면 캐시를 새로운 데이터로 저장한다.
+
+loading (boolean) : data를 받아오는 중인지
+error : Error
+data : 요청한 data
+
+```javascript
+const ALL_MOVIES = gql`
+  query getMovies {
+    allMovies {
+      title
+      id
+    }
+  }
+`;
+
+const { data, loading } = useQuery(ALL_MOVIES);
+```
+
+### argument와 사용하는 useQuery
+
+```javascript
+const GET_MOVIE = gql`
+  query getMovie($movieId: String!) {
+    movie(id: $movieId) {
+      id
+      title
+    }
+  }
+`;
+
+const { data, loading, error } = useQuery(GET_MOVIE, {
+  variables: {
+    movieId: params.id,
+  },
+});
+```
+
+variables에 필요한 인자를 넣어서 사용한다.
+
+### Local Only Fileds
+
+https://www.apollographql.com/docs/react/local-state/managing-state-with-field-policies/
+
+Apollo 클라이언트 쿼리에는 GraphQL 서버의 스키마에 정의되지 않은 로컬 전용 필드가 포함될 수 있다.
+
+@client 지시문은 isLike가 로컬 전용 필드임을 Apollo Client에 알려준다.
+
+```javascript
+const GET_MOVIE = gql`
+  query getMovie($movieId: String!) {
+    movie(id: $movieId) {
+      id
+      title
+      medium_cover_image
+      rating
+      isLike @client
+    }
+  }
+`;
+```
+
+isLike는 로컬 전용이므로 Apollo Client가 데이터를 가져올 때 이 속성은 빼고 요청한다.
+
+최종 쿼리 결과는 모든 로컬(cache) 및 원격 필드가 채워진 후에 반환된다.
+
+### writeFragment
+
+readFragment를 사용하여 Apollo 클라이언트 캐시에서 "random-access" 데이터를 읽는 것 외에도 writeFragment 메서드를 사용하여 캐시에 데이터를 쓸 수 있다.
+
+writeFragment를 사용하여 캐시된 데이터에 대한 변경 사항은 GraphQL 서버에 푸시되지 않는다.
+환경을 다시 로드하면 이러한 변경 사항이 사라진다.
+
+```javascript
+const onClick = () => {
+  cache.writeFragment({
+    id: `Movie:${id}`,
+    fragment: gql`
+      fragment MovieFragment on Movie {
+        isLike
+      }
+    `,
+    data: {
+      isLike: !data.movie.isLike,
+    },
+  });
+};
+```
